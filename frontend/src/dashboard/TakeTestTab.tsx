@@ -198,15 +198,26 @@ const TakeTestTab = ({ testId, walletAddress, onBack }: TakeTestTabProps) => {
 
       const percentage = totalScore > 0 ? (score / totalScore) * 100 : 0;
       
-      // Check if test has ended
+      // CRITICAL: Check if test is currently active (between start and end time)
       const now = new Date();
+      const testStartTime = new Date(test!.start_time);
       const testEndTime = new Date(test!.end_time);
-      const hasTestEnded = now > testEndTime;
+      const isTestActive = now >= testStartTime && now <= testEndTime;
       
-      // Only pass if test is still active
-      const passed = !hasTestEnded && percentage >= (test?.pass_score || 70);
+      console.log('=== TEST SUBMISSION CHECK ===');
+      console.log('Current time:', now.toISOString());
+      console.log('Test start:', test!.start_time);
+      console.log('Test end:', test!.end_time);
+      console.log('Is test ACTIVE?', isTestActive);
+      console.log('Score:', score, '/', totalScore, `(${percentage.toFixed(2)}%)`);
+      
+      // Only pass if test is ACTIVE and score meets threshold
+      const passed = isTestActive && percentage >= (test?.pass_score || 70);
+      
+      console.log('Passed?', passed);
+      console.log('Will create badge?', passed);
 
-      // Save attempt to database
+      // Save ONE attempt to database
       const { error: attemptError } = await supabase
         .from('attempts')
         .insert([{
@@ -220,6 +231,7 @@ const TakeTestTab = ({ testId, walletAddress, onBack }: TakeTestTabProps) => {
         }]);
 
       if (attemptError) throw attemptError;
+      console.log('✅ Attempt saved to database');
 
       // Update test statistics
       await supabase
@@ -231,8 +243,10 @@ const TakeTestTab = ({ testId, walletAddress, onBack }: TakeTestTabProps) => {
         })
         .eq('id', testId);
 
-      // If passed and test is still active, create badge entry and auto-mint
-      if (passed && !hasTestEnded) {
+      // ONLY create badge if test is ACTIVE and user passed
+      if (passed && isTestActive) {
+        console.log('🎖️ Creating badge entry (test is ACTIVE and user PASSED)...');
+        
         const { data: badgeData, error: badgeError } = await supabase
           .from('badges')
           .insert([{
@@ -243,10 +257,14 @@ const TakeTestTab = ({ testId, walletAddress, onBack }: TakeTestTabProps) => {
           .single();
 
         if (badgeError && !badgeError.message.includes('duplicate')) {
-          console.error('Error creating badge:', badgeError);
+          console.error('❌ Error creating badge:', badgeError);
         } else if (badgeData) {
+          console.log('✅ Badge entry created in database');
+          
           // Auto-mint the badge NFT immediately
           try {
+            console.log('🎖️ Auto-minting NFT badge...');
+            
             const metadataUri = await generateBadgeMetadataUri(
               testId,
               walletAddress,
@@ -255,13 +273,15 @@ const TakeTestTab = ({ testId, walletAddress, onBack }: TakeTestTabProps) => {
               totalScore
             );
 
+            console.log('📝 Metadata URI generated:', metadataUri);
+
             const mintResult = await mintBadgeNFT(
               walletAddress,
               testId,
               metadataUri
             );
 
-            console.log('Badge NFT auto-minted:', mintResult);
+            console.log('✅ Badge NFT auto-minted:', mintResult);
 
             // Update badge record with blockchain data
             await supabase
@@ -273,10 +293,20 @@ const TakeTestTab = ({ testId, walletAddress, onBack }: TakeTestTabProps) => {
               })
               .eq('id', badgeData.id);
 
-            console.log(`Badge automatically minted! Token ID: ${mintResult.tokenId}`);
+            console.log(`🎉 Badge successfully created! Token ID: ${mintResult.tokenId}`);
           } catch (mintError) {
             console.error('⚠️ Auto-mint failed, can mint later from My Badges:', mintError);
           }
+        } else if (badgeError?.message.includes('duplicate')) {
+          console.log('ℹ️ Badge already exists for this test');
+        }
+      } else {
+        console.log('ℹ️ No badge created - Test is not active or user did not pass');
+        if (!isTestActive) {
+          console.log('  Reason: Test is not currently active (practice mode)');
+        }
+        if (!passed) {
+          console.log('  Reason: Did not meet pass score threshold');
         }
       }
 

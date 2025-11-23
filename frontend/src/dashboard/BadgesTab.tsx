@@ -12,6 +12,7 @@ interface PracticeAttempt extends Attempt {
 
 interface BadgesTabProps {
   walletAddress: string;
+  onViewTest: (testId: string) => void;
 }
 
 interface GroupedBadges {
@@ -20,7 +21,7 @@ interface GroupedBadges {
   practiceAttempts: PracticeAttempt[];
 }
 
-const BadgesTab = ({ walletAddress }: BadgesTabProps) => {
+const BadgesTab = ({ walletAddress, onViewTest }: BadgesTabProps) => {
   const [groupedBadges, setGroupedBadges] = useState<GroupedBadges[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
@@ -397,7 +398,7 @@ const BadgesTab = ({ walletAddress }: BadgesTabProps) => {
 
                   {badge.metadata_url && (
                     <button
-                      className="w-full text-gray-700 font-semibold py-2 px-4 text-sm border-2 hover:bg-gray-50 transition-all duration-200"
+                      className="w-full text-gray-700 font-semibold py-2 px-4 text-sm border-2 hover:bg-gray-50 transition-all duration-200 mb-2"
                       style={{
                         borderColor: colors.blue,
                         borderRadius: '6px'
@@ -407,6 +408,19 @@ const BadgesTab = ({ walletAddress }: BadgesTabProps) => {
                       }}
                     >
                       View Metadata
+                    </button>
+                  )}
+
+                  {badge.test_id && (
+                    <button
+                      className="w-full text-white font-semibold py-2 px-4 text-sm shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200"
+                      style={{
+                        background: `linear-gradient(135deg, ${colors.orange} 0%, ${colors.gold} 100%)`,
+                        borderRadius: '6px'
+                      }}
+                      onClick={() => onViewTest(badge.test_id)}
+                    >
+                      View Test in Earn Tab
                     </button>
                   )}
                 </div>
@@ -464,7 +478,7 @@ const BadgesTab = ({ walletAddress }: BadgesTabProps) => {
                   </div>
 
                   <div
-                    className="p-3"
+                    className="p-3 mb-3"
                     style={{ backgroundColor: colors.lightYellow, borderRadius: '6px' }}
                   >
                     <p className="text-xs text-gray-700">
@@ -472,6 +486,19 @@ const BadgesTab = ({ walletAddress }: BadgesTabProps) => {
                       No NFT badge is awarded for practice attempts.
                     </p>
                   </div>
+
+                  {attempt.test_id && (
+                    <button
+                      className="w-full text-white font-semibold py-2 px-4 text-sm shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200"
+                      style={{
+                        background: `linear-gradient(135deg, ${colors.rose} 0%, ${colors.pink} 100%)`,
+                        borderRadius: '6px'
+                      }}
+                      onClick={() => onViewTest(attempt.test_id)}
+                    >
+                      Retake Test
+                    </button>
+                  )}
                 </div>
               </div>
             ))}

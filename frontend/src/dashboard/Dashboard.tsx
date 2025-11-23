@@ -88,6 +88,24 @@ const Dashboard = () => {
     navigate('/dashboard');
   };
 
+  const handleViewTestFromBadges = (testId: string) => {
+    // Switch to earn tab
+    setActiveMenu('earn');
+    
+    // Scroll to the test after a short delay to ensure the tab has rendered
+    setTimeout(() => {
+      const testElement = document.getElementById(`test-${testId}`);
+      if (testElement) {
+        testElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Add a highlight effect
+        testElement.style.boxShadow = '0 0 0 4px rgba(59, 130, 246, 0.5)';
+        setTimeout(() => {
+          testElement.style.boxShadow = '';
+        }, 2000);
+      }
+    }, 100);
+  };
+
   if (!user) {
     return (
       <div 
@@ -367,7 +385,12 @@ const Dashboard = () => {
 
           {activeMenu === 'earn' && <EarnTab walletAddress={account} onTakeTest={handleTakeTest} />}
 
-          {activeMenu === 'badges' && <BadgesTab walletAddress={account} />}
+          {activeMenu === 'badges' && (
+            <BadgesTab 
+              walletAddress={account} 
+              onViewTest={handleViewTestFromBadges}
+            />
+          )}
 
           {activeMenu === 'mytests' && <MyTestsTab walletAddress={account} />}
 

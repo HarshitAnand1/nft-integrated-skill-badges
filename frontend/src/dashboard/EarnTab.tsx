@@ -62,12 +62,27 @@ const EarnTab = ({ walletAddress, onTakeTest }: EarnTabProps) => {
 
       const allTests = data || [];
 
+      // For tests with total_questions = 0, fetch actual question count
+      const testsWithQuestionCounts = await Promise.all(
+        allTests.map(async (test) => {
+          if (test.total_questions === 0 || test.total_questions === null) {
+            const { count } = await supabase
+              .from('questions')
+              .select('*', { count: 'exact', head: true })
+              .eq('test_id', test.id);
+            
+            return { ...test, total_questions: count || 0 };
+          }
+          return test;
+        })
+      );
+
       // Separate active, upcoming, and previous tests
       const active: Test[] = [];
       const upcoming: Test[] = [];
       const previous: Test[] = [];
 
-      allTests.forEach((test) => {
+      testsWithQuestionCounts.forEach((test) => {
         const startTime = new Date(test.start_time);
         const endTime = new Date(test.end_time);
         const currentTime = new Date(now);
@@ -207,13 +222,15 @@ const EarnTab = ({ walletAddress, onTakeTest }: EarnTabProps) => {
   const renderTestCard = (test: Test, status: 'active' | 'upcoming' | 'previous') => (
     <div
       key={test.id}
+      id={`test-${test.id}`}
       className="bg-white shadow-md p-6 hover:shadow-lg transition-shadow duration-300"
       style={{
         borderRadius: '8px',
         opacity: status === 'active' ? 1 : 0.85,
         borderLeft: status === 'active' ? `4px solid ${colors.blue}` :
                    status === 'upcoming' ? `4px solid ${colors.gold}` :
-                   `4px solid ${colors.rose}`
+                   `4px solid ${colors.rose}`,
+        transition: 'box-shadow 0.3s ease'
       }}
     >
       <div className="flex justify-between items-start mb-4">
