@@ -1,33 +1,57 @@
-// Application color palette
+// Application color palette - Premium & Minimalistic
 export const allColors = [
-  "#ABE0F0", // Light blue
-  "#FFEE91", // Light yellow
-  "#F5C857", // Gold
-  "#E2852E", // Orange
-  "#F875AA", // Pink
-  "#FDEDED", // Light pink
-  "#EDFFF0", // Light mint
-  "#1581BF", // Blue
-  "#850E35", // Dark red
-  "#EE6983", // Rose
-  "#FFC4C4", // Peach
-  "#FCF5EE"  // Cream
+  "#1A1A2E", // Deep Navy
+  "#16213E", // Dark Blue
+  "#0F3460", // Royal Blue
+  "#533483", // Deep Purple
+  "#E94560", // Accent Red
+  "#F8F9FA", // Off White
+  "#E8E8E8", // Light Gray
+  "#6C757D", // Medium Gray
+  "#343A40", // Dark Gray
+  "#FFD700", // Gold Accent
+  "#4A5568", // Slate
+  "#2D3748"  // Charcoal
 ];
 
 // Named colors for specific use cases
 export const colors = {
-  lightBlue: "#ABE0F0",
-  lightYellow: "#FFEE91",
-  gold: "#F5C857",
-  orange: "#E2852E",
-  pink: "#F875AA",
-  lightPink: "#FDEDED",
-  lightMint: "#EDFFF0",
-  blue: "#1581BF",
-  darkRed: "#850E35",
-  rose: "#EE6983",
-  peach: "#FFC4C4",
-  cream: "#FCF5EE"
+  // Primary
+  primary: "#1A1A2E",
+  primaryDark: "#16213E",
+  primaryLight: "#0F3460",
+  
+  // Accent
+  accent: "#E94560",
+  accentDark: "#D63447",
+  gold: "#FFD700",
+  
+  // Neutrals
+  white: "#FFFFFF",
+  offWhite: "#F8F9FA",
+  lightGray: "#E8E8E8",
+  mediumGray: "#6C757D",
+  darkGray: "#343A40",
+  slate: "#4A5568",
+  charcoal: "#2D3748",
+  
+  // Status
+  success: "#10B981",
+  error: "#EF4444",
+  warning: "#F59E0B",
+  
+  // Legacy (for backward compatibility)
+  lightBlue: "#E8E8E8",
+  lightYellow: "#F8F9FA",
+  orange: "#E94560",
+  pink: "#E94560",
+  lightPink: "#FEF2F2",
+  lightMint: "#F0FDF4",
+  blue: "#0F3460",
+  darkRed: "#D63447",
+  rose: "#E94560",
+  peach: "#FEE2E2",
+  cream: "#F8F9FA"
 };
 
 // Background gradients using the color palette
