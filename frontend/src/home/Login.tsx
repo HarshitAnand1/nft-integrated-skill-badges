@@ -7,7 +7,6 @@ import {
   formatStellarAddress,
 } from "../utils/freighter";
 import type { User } from "../config/supabase";
-import { supabase } from "../config/supabase";
 
 const Login = () => {
   const [account, setAccount] = useState<string>("");
@@ -17,11 +16,6 @@ const Login = () => {
   const [freighterStatus, setFreighterStatus] = useState<string>("Checking...");
   const navigate = useNavigate();
   const [copySuccess, setCopySuccess] = useState<string>("");
-  const [isEditingUsername, setIsEditingUsername] = useState(false);
-  const [username, setUsername] = useState<string>("");
-  const [usernameError, setUsernameError] = useState<string>("");
-  const [isSavingUsername, setIsSavingUsername] = useState(false);
-  const [showWelcome, setShowWelcome] = useState(false);
 
   useEffect(() => {
     checkIfWalletIsConnected();
@@ -100,20 +94,13 @@ const Login = () => {
 
       setAccount(wallet_address);
       setUser(userData);
-      setUsername(userData.username || "");
 
       // Save to localStorage for persistence
       localStorage.setItem("stellar_user", JSON.stringify(userData));
       localStorage.setItem("stellar_wallet", wallet_address);
 
-      // Show welcome message for new users
-      if (isNewUser) {
-        setShowWelcome(true);
-        setTimeout(() => setShowWelcome(false), 5000);
-      } else {
-        // Redirect existing users to dashboard after a short delay
-        setTimeout(() => navigate("/dashboard"), 1500);
-      }
+      // Redirect to dashboard
+      navigate("/dashboard");
     } catch (err: any) {
       console.error("Error connecting wallet:", err);
 
@@ -159,470 +146,359 @@ const Login = () => {
     }
   };
 
-  const handleUsernameEdit = () => {
-    setIsEditingUsername(true);
-    setUsernameError("");
-  };
-
-  const handleUsernameSave = async () => {
-    if (!user) return;
-
-    const trimmedUsername = username.trim();
-    
-    // Validation
-    if (trimmedUsername.length < 3) {
-      setUsernameError("Username must be at least 3 characters");
-      return;
-    }
-    
-    if (trimmedUsername.length > 20) {
-      setUsernameError("Username must be less than 20 characters");
-      return;
-    }
-
-    if (!/^[a-zA-Z0-9_-]+$/.test(trimmedUsername)) {
-      setUsernameError("Username can only contain letters, numbers, - and _");
-      return;
-    }
-
-    try {
-      setIsSavingUsername(true);
-      setUsernameError("");
-
-      const { data, error } = await supabase
-        .from('users')
-        .update({ username: trimmedUsername })
-        .eq('id', user.id)
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      setUser(data);
-      localStorage.setItem("stellar_user", JSON.stringify(data));
-      setIsEditingUsername(false);
-    } catch (err: any) {
-      if (err.code === '23505') {
-        setUsernameError("Username already taken");
-      } else {
-        setUsernameError("Failed to save username");
-      }
-    } finally {
-      setIsSavingUsername(false);
-    }
-  };
-
-  const handleUsernameCancel = () => {
-    setUsername(user?.username || "");
-    setIsEditingUsername(false);
-    setUsernameError("");
-  };
-
-  const getInitials = (name?: string, address?: string) => {
-    if (name) {
-      return name.substring(0, 2).toUpperCase();
-    }
-    if (address) {
-      return address.substring(0, 2).toUpperCase();
-    }
-    return "??";
-  };
-
-  const proceedToDashboard = () => {
-    navigate("/dashboard");
-  };
-
   return (
     <div
-      className="min-h-screen flex items-center justify-center p-6"
+      className="min-h-screen flex items-center justify-center p-5 relative overflow-hidden"
       style={{
-        background: colors.primary,
+        background: `linear-gradient(135deg, ${colors.blue} 0%, ${colors.lightBlue} 50%, ${colors.lightMint} 100%)`,
       }}
     >
-      {/* Main Card */}
+      {/* Pixelated Background Decorations */}
+      <div className="absolute inset-0 pointer-events-none">
+        {/* Top Left Pixel Cluster */}
+        <div className="absolute top-10 left-10 grid grid-cols-3 gap-2 opacity-30">
+          <div className="w-6 h-6" style={{ backgroundColor: colors.lightMint }}></div>
+          <div className="w-6 h-6" style={{ backgroundColor: colors.lightBlue }}></div>
+          <div className="w-6 h-6" style={{ backgroundColor: colors.cream }}></div>
+          <div className="w-6 h-6" style={{ backgroundColor: colors.lightYellow }}></div>
+          <div className="w-6 h-6" style={{ backgroundColor: colors.peach }}></div>
+          <div className="w-6 h-6" style={{ backgroundColor: colors.lightMint }}></div>
+        </div>
+        
+        {/* Bottom Right Pixel Cluster */}
+        <div className="absolute bottom-10 right-10 grid grid-cols-4 gap-2 opacity-30">
+          <div className="w-5 h-5" style={{ backgroundColor: colors.gold }}></div>
+          <div className="w-5 h-5" style={{ backgroundColor: colors.orange }}></div>
+          <div className="w-5 h-5" style={{ backgroundColor: colors.peach }}></div>
+          <div className="w-5 h-5" style={{ backgroundColor: colors.lightYellow }}></div>
+          <div className="w-5 h-5" style={{ backgroundColor: colors.cream }}></div>
+          <div className="w-5 h-5" style={{ backgroundColor: colors.gold }}></div>
+          <div className="w-5 h-5" style={{ backgroundColor: colors.orange }}></div>
+          <div className="w-5 h-5" style={{ backgroundColor: colors.lightBlue }}></div>
+        </div>
+        
+        {/* Top Right Scattered Pixels */}
+        <div className="absolute top-32 right-24 grid grid-cols-2 gap-3 opacity-25">
+          <div className="w-7 h-7" style={{ backgroundColor: colors.pink }}></div>
+          <div className="w-7 h-7" style={{ backgroundColor: colors.lightPink }}></div>
+          <div className="w-7 h-7" style={{ backgroundColor: colors.rose }}></div>
+          <div className="w-7 h-7" style={{ backgroundColor: colors.peach }}></div>
+        </div>
+      </div>
+
       <div
-        className="bg-white shadow-xl max-w-md w-full"
-        style={{
-          borderRadius: "24px",
-          overflow: "hidden",
-          border: `1px solid ${colors.lightGray}`,
-        }}
+        className="bg-white shadow-2xl p-10 max-w-lg w-full animate-fade-in relative z-10"
+        style={{ borderRadius: "12px" }}
       >
-        {/* Header Section */}
-        <div
-          className="p-12 text-center"
-          style={{
-            background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.primaryLight} 100%)`,
+        {/* Pixelated Logo Icon */}
+        <div className="flex items-center justify-center mb-6">
+          <svg
+            width="64"
+            height="64"
+            viewBox="0 0 64 64"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden
+          >
+            {/* Pixel art star/badge shape */}
+            <rect x="24" y="8" width="8" height="8" fill={colors.gold} />
+            <rect x="32" y="8" width="8" height="8" fill={colors.gold} />
+            
+            <rect x="16" y="16" width="8" height="8" fill={colors.orange} />
+            <rect x="24" y="16" width="8" height="8" fill={colors.lightYellow} />
+            <rect x="32" y="16" width="8" height="8" fill={colors.lightYellow} />
+            <rect x="40" y="16" width="8" height="8" fill={colors.orange} />
+            
+            <rect x="8" y="24" width="8" height="8" fill={colors.orange} />
+            <rect x="16" y="24" width="8" height="8" fill={colors.gold} />
+            <rect x="24" y="24" width="8" height="8" fill={colors.cream} />
+            <rect x="32" y="24" width="8" height="8" fill={colors.cream} />
+            <rect x="40" y="24" width="8" height="8" fill={colors.gold} />
+            <rect x="48" y="24" width="8" height="8" fill={colors.orange} />
+            
+            <rect x="8" y="32" width="8" height="8" fill={colors.orange} />
+            <rect x="16" y="32" width="8" height="8" fill={colors.gold} />
+            <rect x="24" y="32" width="8" height="8" fill={colors.cream} />
+            <rect x="32" y="32" width="8" height="8" fill={colors.cream} />
+            <rect x="40" y="32" width="8" height="8" fill={colors.gold} />
+            <rect x="48" y="32" width="8" height="8" fill={colors.orange} />
+            
+            <rect x="16" y="40" width="8" height="8" fill={colors.orange} />
+            <rect x="24" y="40" width="8" height="8" fill={colors.gold} />
+            <rect x="32" y="40" width="8" height="8" fill={colors.gold} />
+            <rect x="40" y="40" width="8" height="8" fill={colors.orange} />
+            
+            <rect x="24" y="48" width="8" height="8" fill={colors.gold} />
+            <rect x="32" y="48" width="8" height="8" fill={colors.gold} />
+          </svg>
+        </div>
+        
+        <h1
+          className="text-4xl font-bold text-center mb-3"
+          style={{ 
+            color: colors.darkRed,
+            textShadow: `2px 2px 0px ${colors.rose}40`
           }}
         >
-          {/* Logo */}
-          <div className="flex items-center justify-center mb-4">
-            <div
+          Stellar Skills
+        </h1>
+        <p 
+          className="text-center mb-8 text-base"
+          style={{ color: colors.blue }}
+        >
+          Connect your Freighter wallet to get started
+        </p>
+
+        {/* Freighter Status Indicator */}
+        <div
+          className="p-4 mb-5 relative overflow-hidden"
+          style={{
+            backgroundColor:
+              freighterStatus === "Detected"
+                ? colors.lightMint
+                : freighterStatus === "Not installed"
+                ? colors.lightPink
+                : colors.lightYellow,
+            borderRadius: "8px",
+          }}
+          role="status"
+          aria-live="polite"
+        >
+          {/* Pixel decoration in corner */}
+          <div className="absolute top-0 right-0 grid grid-cols-2 gap-1 opacity-20">
+            <div className="w-3 h-3" style={{ 
+              backgroundColor: freighterStatus === "Detected" ? colors.blue : colors.orange 
+            }}></div>
+            <div className="w-3 h-3" style={{ 
+              backgroundColor: freighterStatus === "Detected" ? colors.lightBlue : colors.gold 
+            }}></div>
+            <div className="w-3 h-3" style={{ 
+              backgroundColor: freighterStatus === "Detected" ? colors.lightBlue : colors.gold 
+            }}></div>
+            <div className="w-3 h-3" style={{ 
+              backgroundColor: freighterStatus === "Detected" ? colors.blue : colors.orange 
+            }}></div>
+          </div>
+          
+          <div className="flex items-center justify-between mb-2 relative z-10">
+            <span className="text-sm font-semibold" style={{ color: colors.darkRed }}>
+              Freighter Wallet
+            </span>
+            <span
+              className="text-sm font-bold px-3 py-1 rounded"
               style={{
-                width: "64px",
-                height: "64px",
-                borderRadius: "16px",
-                background: colors.white,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                backgroundColor: "white",
+                color:
+                  freighterStatus === "Detected"
+                    ? colors.blue
+                    : freighterStatus === "Not installed"
+                    ? colors.darkRed
+                    : colors.orange,
               }}
             >
-              <svg
-                width="36"
-                height="36"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"
-                  fill={colors.gold}
-                />
-              </svg>
-            </div>
+              {freighterStatus === "Detected" && "Detected"}
+              {freighterStatus === "Not installed" && "Not Installed"}
+              {freighterStatus === "Checking..." && "Checking..."}
+              {freighterStatus === "Waiting for extension..." && "Loading..."}
+            </span>
           </div>
 
-          <h1
-            className="text-3xl font-bold mb-2"
-            style={{ color: colors.white, letterSpacing: "-0.5px" }}
-          >
-            Stellar Skills
-          </h1>
-          <p
-            className="text-sm"
-            style={{ color: colors.lightGray, opacity: 0.9 }}
-          >
-            Blockchain-Verified Credentials
-          </p>
+          {freighterStatus === "Not installed" && (
+            <button
+              onClick={() => {
+                setFreighterStatus("Checking...");
+                checkFreighterStatus();
+              }}
+              className="w-full text-sm font-semibold py-2 px-4 mt-2 transition-all duration-200 hover:opacity-90 relative z-10"
+              style={{
+                backgroundColor: colors.blue,
+                color: "white",
+                borderRadius: "6px",
+                border: "none",
+              }}
+            >
+              Re-check for Freighter
+            </button>
+          )}
         </div>
 
-        {/* Content Section */}
-        <div className="p-8">
-          {!account ? (
-            <>
-              {/* Wallet Status */}
-              <div
-                className="mb-6 p-4 flex items-center justify-between"
-                style={{
-                  backgroundColor: freighterStatus === "Detected" ? colors.offWhite : colors.lightPink,
-                  borderRadius: "12px",
-                  border: `1px solid ${freighterStatus === "Detected" ? colors.lightGray : colors.error}`,
-                }}
-              >
-                <div className="flex items-center gap-3">
-                  <div
-                    style={{
-                      width: "10px",
-                      height: "10px",
-                      borderRadius: "50%",
-                      backgroundColor: freighterStatus === "Detected" ? colors.success : colors.error,
-                    }}
-                  />
-                  <span className="text-sm font-medium" style={{ color: colors.charcoal }}>
-                    Freighter Wallet
-                  </span>
-                </div>
-                <span className="text-xs font-semibold" style={{ color: colors.mediumGray }}>
-                  {freighterStatus === "Detected" && "Ready"}
-                  {freighterStatus === "Not installed" && "Not Found"}
-                  {freighterStatus === "Checking..." && "Checking..."}
+        {error && (
+          <div
+            className="p-4 mb-5 relative overflow-hidden"
+            style={{
+              backgroundColor: colors.lightPink,
+              color: colors.darkRed,
+              borderRadius: "8px",
+            }}
+            role="alert"
+            aria-live="assertive"
+          >
+            {/* Pixel decoration */}
+            <div className="absolute bottom-0 left-0 grid grid-cols-3 gap-1 opacity-15">
+              <div className="w-3 h-3" style={{ backgroundColor: colors.rose }}></div>
+              <div className="w-3 h-3" style={{ backgroundColor: colors.pink }}></div>
+              <div className="w-3 h-3" style={{ backgroundColor: colors.rose }}></div>
+            </div>
+            <span className="relative z-10 font-medium">{error}</span>
+          </div>
+        )}
+
+        {!account ? (
+          <button
+            className="w-full text-white font-bold py-4 px-6 text-base shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed mb-6 relative overflow-hidden group"
+            style={{
+              background: `linear-gradient(135deg, ${colors.orange} 0%, ${colors.gold} 100%)`,
+              borderRadius: "8px",
+              border: "none",
+            }}
+            onClick={connectWallet}
+            disabled={loading || freighterStatus !== "Detected"}
+          >
+            {/* Pixel hover effect */}
+            <div className="absolute inset-0 grid grid-cols-8 gap-1 opacity-0 group-hover:opacity-10 transition-opacity duration-300 pointer-events-none">
+              {[...Array(24)].map((_, i) => (
+                <div key={i} className="w-full h-full" style={{ backgroundColor: colors.lightYellow }}></div>
+              ))}
+            </div>
+            <span className="relative z-10">
+              {loading
+                ? "Connecting..."
+                : freighterStatus !== "Detected"
+                ? "Install Freighter First"
+                : "Connect Wallet"}
+            </span>
+          </button>
+        ) : (
+          <div className="mb-6">
+            <div
+              className="p-5 mb-5 relative overflow-hidden"
+              style={{ 
+                backgroundColor: colors.cream, 
+                borderRadius: "8px"
+              }}
+            >
+              {/* Decorative pixels in corner */}
+              <div className="absolute top-2 left-2 grid grid-cols-2 gap-1 opacity-20">
+                <div className="w-2 h-2" style={{ backgroundColor: colors.gold }}></div>
+                <div className="w-2 h-2" style={{ backgroundColor: colors.orange }}></div>
+                <div className="w-2 h-2" style={{ backgroundColor: colors.orange }}></div>
+                <div className="w-2 h-2" style={{ backgroundColor: colors.gold }}></div>
+              </div>
+              
+              <div className="flex justify-between py-2.5 border-b relative z-10" style={{ borderColor: colors.peach }}>
+                <span className="font-semibold" style={{ color: colors.darkRed }}>
+                  Connected Wallet
                 </span>
-              </div>
-
-              {/* Error Message */}
-              {error && (
-                <div
-                  className="mb-6 p-4 animate-fade-in"
-                  style={{
-                    backgroundColor: colors.lightPink,
-                    borderRadius: "12px",
-                    borderLeft: `4px solid ${colors.error}`,
-                  }}
-                  role="alert"
-                >
-                  <p className="text-sm m-0" style={{ color: colors.error }}>
-                    {error}
-                  </p>
-                </div>
-              )}
-
-              {/* Connect Button */}
-              <button
-                className="w-full font-semibold py-4 text-base transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed mb-6"
-                style={{
-                  background: freighterStatus === "Detected"
-                    ? `linear-gradient(135deg, ${colors.primary} 0%, ${colors.primaryLight} 100%)`
-                    : colors.mediumGray,
-                  color: colors.white,
-                  borderRadius: "12px",
-                  border: "none",
-                  boxShadow: freighterStatus === "Detected" ? "0 4px 12px rgba(26, 26, 46, 0.2)" : "none",
-                  transform: loading ? "scale(0.98)" : "scale(1)",
-                }}
-                onClick={connectWallet}
-                disabled={loading || freighterStatus !== "Detected"}
-                onMouseOver={(e) => {
-                  if (freighterStatus === "Detected" && !loading) {
-                    e.currentTarget.style.transform = "translateY(-2px)";
-                    e.currentTarget.style.boxShadow = "0 6px 16px rgba(26, 26, 46, 0.3)";
-                  }
-                }}
-                onMouseOut={(e) => {
-                  e.currentTarget.style.transform = "translateY(0)";
-                  e.currentTarget.style.boxShadow = "0 4px 12px rgba(26, 26, 46, 0.2)";
-                }}
-              >
-                {loading ? "Connecting..." : freighterStatus !== "Detected" ? "Wallet Not Detected" : "Connect Wallet"}
-              </button>
-
-              {/* Install Link */}
-              {freighterStatus !== "Detected" && (
-                <div className="text-center">
-                  <a
-                    href="https://www.freighter.app/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm font-medium inline-flex items-center gap-1"
-                    style={{
-                      color: colors.primary,
-                      textDecoration: "none",
-                    }}
+                <div className="flex items-center gap-3">
+                  <span
+                    className="font-mono text-sm"
+                    style={{ color: colors.blue }}
                   >
-                    Install Freighter Wallet
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                      <path d="M7 17L17 7M17 7H7M17 7V17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  </a>
-                </div>
-              )}
-
-              {/* Features */}
-              <div className="mt-8 pt-6" style={{ borderTop: `1px solid ${colors.lightGray}` }}>
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3">
-                    <div style={{ color: colors.success, fontSize: "18px" }}>✓</div>
-                    <span className="text-sm" style={{ color: colors.slate }}>Secure blockchain authentication</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div style={{ color: colors.success, fontSize: "18px" }}>✓</div>
-                    <span className="text-sm" style={{ color: colors.slate }}>NFT-verified credentials</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div style={{ color: colors.success, fontSize: "18px" }}>✓</div>
-                    <span className="text-sm" style={{ color: colors.slate }}>Decentralized skill validation</span>
-                  </div>
-                </div>
-              </div>
-            </>
-          ) : (
-            <>
-              {/* Welcome Message */}
-              {showWelcome && (
-                <div
-                  className="mb-6 p-4 text-center animate-fade-in"
-                  style={{
-                    background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.primaryLight} 100%)`,
-                    borderRadius: "12px",
-                    color: colors.white,
-                  }}
-                >
-                  <p className="text-sm font-medium m-0">Welcome! Set up your profile below.</p>
-                </div>
-              )}
-
-              {/* Profile Section */}
-              <div className="mb-6">
-                <div className="flex items-center gap-4 mb-6">
-                  {/* Avatar */}
-                  <div
-                    style={{
-                      width: "72px",
-                      height: "72px",
-                      borderRadius: "50%",
-                      background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: "24px",
-                      fontWeight: "600",
-                      color: colors.white,
-                      flexShrink: 0,
-                    }}
-                  >
-                    {getInitials(user?.username, account)}
-                  </div>
-
-                  {/* Username */}
-                  <div className="flex-1">
-                    {!isEditingUsername ? (
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <h2
-                            className="text-xl font-semibold m-0"
-                            style={{ color: colors.primary }}
-                          >
-                            {user?.username || "Set Username"}
-                          </h2>
-                          <button
-                            onClick={handleUsernameEdit}
-                            className="text-xs px-2 py-1 hover:bg-gray-100 rounded transition-colors"
-                            style={{
-                              color: colors.mediumGray,
-                              border: `1px solid ${colors.lightGray}`,
-                              background: "transparent",
-                            }}
-                          >
-                            Edit
-                          </button>
-                        </div>
-                        <p className="text-xs m-0" style={{ color: colors.mediumGray }}>
-                          {formatAddress(account)}
-                        </p>
-                      </div>
-                    ) : (
-                      <div>
-                        <div className="flex gap-2 mb-2">
-                          <input
-                            type="text"
-                            value={username}
-                            onChange={(e) => setUsername(e.target.value)}
-                            placeholder="username"
-                            className="flex-1 px-3 py-2 text-sm rounded-lg"
-                            style={{
-                              border: `1px solid ${usernameError ? colors.error : colors.lightGray}`,
-                              outline: "none",
-                            }}
-                            maxLength={20}
-                            autoFocus
-                          />
-                          <button
-                            onClick={handleUsernameSave}
-                            disabled={isSavingUsername}
-                            className="px-3 py-2 rounded-lg font-semibold text-sm transition-colors disabled:opacity-50"
-                            style={{
-                              background: colors.success,
-                              color: colors.white,
-                              border: "none",
-                            }}
-                          >
-                            {isSavingUsername ? "..." : "✓"}
-                          </button>
-                          <button
-                            onClick={handleUsernameCancel}
-                            className="px-3 py-2 rounded-lg font-semibold text-sm transition-colors"
-                            style={{
-                              background: colors.lightGray,
-                              color: colors.charcoal,
-                              border: "none",
-                            }}
-                          >
-                            ✕
-                          </button>
-                        </div>
-                        {usernameError && (
-                          <p className="text-xs m-0" style={{ color: colors.error }}>
-                            {usernameError}
-                          </p>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Copy Address */}
-                <div
-                  className="p-3 flex items-center justify-between"
-                  style={{
-                    backgroundColor: colors.offWhite,
-                    borderRadius: "8px",
-                  }}
-                >
-                  <span className="text-xs font-mono" style={{ color: colors.slate }}>
-                    {account}
+                    {formatAddress(account)}
                   </span>
                   <button
                     onClick={copyAddressToClipboard}
-                    className="text-xs px-3 py-1 rounded hover:bg-white transition-colors"
+                    className="text-xs px-3 py-1 font-semibold rounded transition-all duration-200 hover:opacity-80"
                     style={{
-                      color: colors.primary,
-                      border: `1px solid ${colors.lightGray}`,
-                      background: "transparent",
+                      backgroundColor: colors.lightBlue,
+                      color: colors.blue,
+                      border: "none",
                     }}
+                    aria-label="Copy full wallet address"
+                    title="Copy full wallet address"
                   >
-                    {copySuccess || "Copy"}
+                    Copy
                   </button>
+                  {copySuccess && (
+                    <span className="text-xs font-semibold" style={{ color: colors.blue }}>
+                      {copySuccess}
+                    </span>
+                  )}
                 </div>
               </div>
-
-              {/* Action Buttons */}
-              <button
-                onClick={proceedToDashboard}
-                className="w-full font-semibold py-4 text-base transition-all duration-300 mb-3"
-                style={{
-                  background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.primaryLight} 100%)`,
-                  color: colors.white,
-                  borderRadius: "12px",
-                  border: "none",
-                  boxShadow: "0 4px 12px rgba(26, 26, 46, 0.2)",
-                }}
-                onMouseOver={(e) => {
-                  e.currentTarget.style.transform = "translateY(-2px)";
-                  e.currentTarget.style.boxShadow = "0 6px 16px rgba(26, 26, 46, 0.3)";
-                }}
-                onMouseOut={(e) => {
-                  e.currentTarget.style.transform = "translateY(0)";
-                  e.currentTarget.style.boxShadow = "0 4px 12px rgba(26, 26, 46, 0.2)";
-                }}
-              >
-                Continue to Dashboard
-              </button>
-
-              <button
-                onClick={disconnectWallet}
-                className="w-full font-medium py-3 text-sm transition-colors"
-                style={{
-                  background: "transparent",
-                  color: colors.mediumGray,
-                  border: `1px solid ${colors.lightGray}`,
-                  borderRadius: "12px",
-                }}
-              >
-                Disconnect
-              </button>
-
-              {/* Stats */}
               {user && (
-                <div
-                  className="mt-6 pt-6 flex justify-between text-center"
-                  style={{ borderTop: `1px solid ${colors.lightGray}` }}
-                >
-                  <div>
-                    <div className="text-xs mb-1" style={{ color: colors.mediumGray }}>
-                      Joined
-                    </div>
-                    <div className="text-sm font-semibold" style={{ color: colors.charcoal }}>
-                      {new Date(user.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
-                    </div>
+                <>
+                  <div className="flex justify-between py-2.5 border-b relative z-10" style={{ borderColor: colors.peach }}>
+                    <span className="font-semibold" style={{ color: colors.darkRed }}>
+                      User ID
+                    </span>
+                    <span
+                      className="font-mono text-sm"
+                      style={{ color: colors.blue }}
+                    >
+                      {user.id}
+                    </span>
                   </div>
-                  <div style={{ width: "1px", background: colors.lightGray }} />
-                  <div>
-                    <div className="text-xs mb-1" style={{ color: colors.mediumGray }}>
-                      Last Active
-                    </div>
-                    <div className="text-sm font-semibold" style={{ color: colors.charcoal }}>
-                      {new Date(user.last_login).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                    </div>
+                  <div className="flex justify-between py-2.5 border-b relative z-10" style={{ borderColor: colors.peach }}>
+                    <span className="font-semibold" style={{ color: colors.darkRed }}>Joined</span>
+                    <span
+                      className="font-mono text-sm"
+                      style={{ color: colors.blue }}
+                    >
+                      {new Date(user.created_at).toLocaleDateString()}
+                    </span>
                   </div>
-                </div>
+                  <div className="flex justify-between py-2.5 relative z-10">
+                    <span className="font-semibold" style={{ color: colors.darkRed }}>
+                      Last Login
+                    </span>
+                    <span
+                      className="font-mono text-sm"
+                      style={{ color: colors.blue }}
+                    >
+                      {new Date(user.last_login).toLocaleString()}
+                    </span>
+                  </div>
+                </>
               )}
-            </>
-          )}
+            </div>
+            <button
+              className="w-full font-semibold py-4 px-6 transition-all duration-200 hover:opacity-80"
+              style={{ 
+                backgroundColor: colors.lightPink,
+                color: colors.darkRed,
+                borderRadius: "8px",
+                border: "none",
+              }}
+              onClick={disconnectWallet}
+            >
+              Disconnect
+            </button>
+          </div>
+        )}
+
+        <div
+          className="p-4 relative overflow-hidden"
+          style={{
+            backgroundColor: colors.lightYellow,
+            borderRadius: "8px",
+          }}
+        >
+          {/* Decorative pixel pattern */}
+          <div className="absolute bottom-0 right-0 grid grid-cols-3 gap-1 opacity-15">
+            <div className="w-3 h-3" style={{ backgroundColor: colors.gold }}></div>
+            <div className="w-3 h-3" style={{ backgroundColor: colors.orange }}></div>
+            <div className="w-3 h-3" style={{ backgroundColor: colors.gold }}></div>
+            <div className="w-3 h-3" style={{ backgroundColor: colors.orange }}></div>
+            <div className="w-3 h-3" style={{ backgroundColor: colors.gold }}></div>
+            <div className="w-3 h-3" style={{ backgroundColor: colors.orange }}></div>
+          </div>
+          
+          <p className="m-0 leading-relaxed relative z-10" style={{ color: colors.darkRed }}>
+            <strong>Note:</strong> Make sure you have
+            Freighter wallet extension installed in your browser. Download from{" "}
+            <a
+              href="https://www.freighter.app/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold hover:opacity-80 transition-opacity"
+              style={{ color: colors.blue, textDecoration: "underline" }}
+            >
+              freighter.app
+            </a>
+          </p>
         </div>
       </div>
     </div>
   );
 };
-
-export default Login;
