@@ -192,10 +192,15 @@ export const generateBadgeMetadataUri = async (
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
     const fileName = `${testId}_${walletAddress}.json`;
     
+    console.log('🎖️ Generating badge metadata...');
+    console.log('  Test ID:', testId);
+    console.log('  Wallet:', walletAddress);
+    console.log('  File name:', fileName);
+    
     // Create metadata object
     const metadata = {
       name: `${testTitle || 'Skill Badge'} - Achievement`,
-      description: `Badge earned for completing ${testTitle || 'the test'}`,
+      description: `Badge earned for completing ${testTitle || 'the test'} with a score of ${score}/${totalScore}`,
       image: `${supabaseUrl}/storage/v1/object/public/badge-metadata/badge-icon.png`,
       attributes: [
         {
@@ -203,12 +208,20 @@ export const generateBadgeMetadataUri = async (
           value: testId
         },
         {
+          trait_type: 'Test Title',
+          value: testTitle || 'Unknown Test'
+        },
+        {
           trait_type: 'Wallet Address',
           value: walletAddress
         },
         {
           trait_type: 'Score',
-          value: score ? `${score}/${totalScore}` : 'Passed'
+          value: score && totalScore ? `${score}/${totalScore}` : 'Passed'
+        },
+        {
+          trait_type: 'Percentage',
+          value: score && totalScore ? `${((score/totalScore) * 100).toFixed(2)}%` : 'N/A'
         },
         {
           trait_type: 'Issued Date',
@@ -217,24 +230,41 @@ export const generateBadgeMetadataUri = async (
       ]
     };
 
+    console.log('📝 Metadata object created:', metadata);
+
     // Upload metadata to Supabase Storage
-    const { error: uploadError } = await supabase.storage
+    const { data: uploadData, error: uploadError } = await supabase.storage
       .from('badge-metadata')
       .upload(fileName, JSON.stringify(metadata, null, 2), {
         contentType: 'application/json',
         upsert: true // Overwrite if exists
       });
 
-    if (uploadError && !uploadError.message.includes('already exists')) {
-      console.error('Error uploading badge metadata:', uploadError);
+    if (uploadError) {
+      console.error('❌ Error uploading badge metadata:', uploadError);
+      throw uploadError;
     }
 
-    return `${supabaseUrl}/storage/v1/object/public/badge-metadata/${fileName}`;
+    console.log('✅ Metadata uploaded successfully:', uploadData);
+    
+    const metadataUrl = `${supabaseUrl}/storage/v1/object/public/badge-metadata/${fileName}`;
+    console.log('🔗 Metadata URL:', metadataUrl);
+    
+    // Verify the upload by checking if file exists
+    const { data: fileList } = await supabase.storage
+      .from('badge-metadata')
+      .list('', { search: fileName });
+    
+    if (fileList && fileList.length > 0) {
+      console.log('✅ Verified: File exists in bucket');
+    } else {
+      console.warn('⚠️ Warning: Could not verify file existence');
+    }
+
+    return metadataUrl;
   } catch (error) {
-    console.error('Error generating badge metadata:', error);
-    // Fallback to simple URL if upload fails
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-    return `${supabaseUrl}/storage/v1/object/public/badge-metadata/${testId}_${walletAddress}.json`;
+    console.error('❌ Error generating badge metadata:', error);
+    throw error; // Throw error instead of returning fallback
   }
 };
 

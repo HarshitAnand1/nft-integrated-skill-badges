@@ -92,7 +92,8 @@ const CreateTestTab = ({ walletAddress }: CreateTestTabProps) => {
           difficulty,
           start_time: new Date(startTime).toISOString(),
           end_time: new Date(endTime).toISOString(),
-          pass_score: passScore
+          pass_score: passScore,
+          total_questions: questions.length
         }])
         .select()
         .single();
